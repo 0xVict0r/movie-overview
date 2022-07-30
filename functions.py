@@ -9,7 +9,7 @@ def get_imdb_rating(imdb_id):
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    return soup.find("span", class_="sc-7ab21ed2-1 jGRxWM").text
+    return float(soup.find("span", class_="sc-7ab21ed2-1 jGRxWM").text)
 
 
 def get_rt_ratings(movie_name, year_str):
@@ -36,10 +36,10 @@ def get_rt_ratings(movie_name, year_str):
     return float(movie_rating)*2
 
 
-def safe_execute(default, exception, function, *args):
+def safe_execute(default, exceptions, function, *args):
     try:
         return function(*args)
-    except exception:
+    except exceptions:
         return default
 
 

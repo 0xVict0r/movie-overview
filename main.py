@@ -28,6 +28,9 @@ if submit_bttn:
     movie_data = requests.get(
         f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}").json()
 
+    cast_data = requests.get(
+        f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}").json()["cast"]
+
     poster_link = movie_data["poster_path"]
     title = movie_data["original_title"]
     release_date = movie_data["release_date"]
@@ -38,6 +41,8 @@ if submit_bttn:
         map(str, [country["name"] for country in movie_data["production_countries"]]))
     movie_genres = ', '.join(
         map(str, [genre["name"] for genre in movie_data["genres"]]))
+    movie_cast = ', '.join(
+        map(str, [cast["name"] for cast in cast_data][:6]))
     imdb_id = movie_data["imdb_id"]
     tmdb_rating = movie_data["vote_average"]
 
@@ -50,16 +55,18 @@ if submit_bttn:
     ###### *Original Language: {movie_language}*
     ###### *Country(ies): {movie_countries}*
     ###### *Genre(s): {movie_genres}*
+    ###### *Main Cast: {movie_cast}*
     *{synopsis}*
     """)
 
     imdb_rating = functions.safe_execute(
-        None, AttributeError, functions.get_imdb_rating, imdb_id)
+        None, (AttributeError, TypeError), functions.get_imdb_rating, imdb_id)
     rt_rating = functions.safe_execute(
-        None, AttributeError, functions.get_rt_ratings, title, release_date[:4])
+        None, (AttributeError, TypeError), functions.get_rt_ratings, title, release_date[:4])
 
-    ratings_list = [float(imdb_rating), tmdb_rating, rt_rating]
+    ratings_list = [imdb_rating, tmdb_rating, rt_rating]
 
-    rating = np.mean(np.array([rating for rating in ratings_list if type(rating) != NoneType]))
+    rating = np.mean(
+        np.array([rating for rating in ratings_list if type(rating) != NoneType]))
 
     st.metric("Movie Rating", f"{np.round(rating*10, 2)}%")
