@@ -18,6 +18,14 @@ st.markdown(
 st.markdown(
     """<style> div.stButton > button:first-child { width: 100% ; } </style>""", unsafe_allow_html=True)
 
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 with st.sidebar:
     with st.form("Main Form"):
 
