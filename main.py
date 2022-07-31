@@ -9,8 +9,14 @@ api_key = st.secrets["tmdb_api"]
 
 st.set_page_config(layout="wide")
 
+st.title("Movie Overview & Rating Aggregator")
+
+st.write("A tool that aggregates movie data from multiple sources (TMDB, IMDB, Rotten Tomatoes) to give a nice overview. It also gives an aggregated movie rating from the before mentionned sources. Simply enter the name of the movie (no TV) and the program will find the relevant information for you.")
+
 st.markdown(
     "<style>.css-15zrgzn {display: none}</style>", unsafe_allow_html=True)
+st.markdown(
+    """<style> div.stButton > button:first-child { width: 100% ; } </style>""", unsafe_allow_html=True)
 
 with st.sidebar:
     with st.form("Main Form"):

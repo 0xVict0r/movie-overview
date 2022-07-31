@@ -1,1 +1,5 @@
 language-data
+beautifulsoup4
+requests
+langcodes
+numpy
