@@ -1,4 +1,3 @@
-from types import NoneType
 import streamlit as st
 import requests
 from langcodes import Language
@@ -73,6 +72,6 @@ if submit_bttn:
     ratings_list = [imdb_rating, tmdb_rating, rt_rating]
 
     rating = np.mean(
-        np.array([rating for rating in ratings_list if type(rating) != NoneType]))
+        np.array([rating for rating in ratings_list if type(rating) != type(None)]))
 
     st.metric("Movie Rating", f"{np.round(rating*10, 2)}%")
