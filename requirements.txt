@@ -5,3 +5,4 @@ langcodes
 numpy
 streamlit
 httpx
+plotly

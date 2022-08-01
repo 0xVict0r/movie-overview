@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import httpx
 import json
-from numpy import character
 import streamlit as st
 
 api_key = st.secrets["tmdb_api"]
