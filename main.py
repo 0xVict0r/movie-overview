@@ -4,6 +4,7 @@ from langcodes import Language
 import functions
 import numpy as np
 import plotly.graph_objects as go
+import datetime
 
 api_key = st.secrets["tmdb_api"]
 
@@ -51,16 +52,19 @@ if submit_bttn:
         map(str, [cast["name"] for cast in cast_data][:6]))
     imdb_id = movie_data["imdb_id"]
     tmdb_rating = movie_data["vote_average"]
+    run_time = datetime.timedelta(minutes=movie_data["runtime"])
 
     col1, col2 = st.columns([1, 4])
     col1.image(
         f"https://image.tmdb.org/t/p/original{poster_link}", use_column_width=True)
+
     col2.markdown(f"""
     # {title}
     ##### *Release Date: {release_date}*
     ###### *Original Language: {movie_language}*
     ###### *Country(ies): {movie_countries}*
     ###### *Genre(s): {movie_genres}*
+    ###### *Run Time (HH:MM:SS): {run_time}*
     *{synopsis}*
     """)
 
