@@ -1,10 +1,8 @@
 import streamlit as st
 import httpx
-from langcodes import Language
+from movie_class import Movie
 import functions
 import numpy as np
-import plotly.graph_objects as go
-import datetime
 
 api_key = st.secrets["tmdb_api"]
 
@@ -32,76 +30,22 @@ if submit_bttn:
     movie_id = httpx.get(
         f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}&page=1&include_adult=false").json()["results"][0]["id"]
 
-    movie_data = httpx.get(
-        f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}").json()
+    movie = Movie(movie_id, api_key)
 
-    cast_data = httpx.get(
-        f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}").json()["cast"]
-
-    poster_link = movie_data["poster_path"]
-    title = movie_data["original_title"]
-    release_date = movie_data["release_date"]
-    synopsis = movie_data["overview"]
-    movie_language = Language.make(
-        language=movie_data["original_language"]).display_name()
-    movie_countries = ', '.join(
-        map(str, [country["name"] for country in movie_data["production_countries"]]))
-    movie_genres = ', '.join(
-        map(str, [genre["name"] for genre in movie_data["genres"]]))
-    movie_cast = ', '.join(
-        map(str, [cast["name"] for cast in cast_data][:6]))
-    imdb_id = movie_data["imdb_id"]
-    tmdb_rating = movie_data["vote_average"]
-    run_time = datetime.timedelta(minutes=movie_data["runtime"])
-
-    col1, col2 = st.columns([1, 4])
-    col1.image(
-        f"https://image.tmdb.org/t/p/original{poster_link}", use_column_width=True)
-
-    col2.markdown(f"""
-    # {title}
-    ##### *Release Date: {release_date}*
-    ###### *Original Language: {movie_language}*
-    ###### *Country(ies): {movie_countries}*
-    ###### *Genre(s): {movie_genres}*
-    ###### *Run Time (HH:MM:SS): {run_time}*
-    *{synopsis}*
-    """)
+    functions.plot_general_info(movie)
 
     imdb_rating = functions.safe_execute(
-        None, (AttributeError, TypeError), functions.get_imdb_rating, imdb_id)
+        None, (AttributeError, TypeError), movie.get_imdb_rating)
     rt_rating = functions.safe_execute(
-        None, (AttributeError, TypeError, IndexError, ValueError), functions.get_rt_ratings, title, release_date[:4])
+        None, (AttributeError, TypeError, IndexError, ValueError), movie.get_rt_ratings)
     allocine_rating = functions.safe_execute(
-        None, (AttributeError, TypeError, IndexError, ValueError), functions.get_rt_ratings, title, release_date[:4])
+        None, (AttributeError, TypeError, IndexError, ValueError), movie.get_allocine_ratings)
 
-    ratings_list = [imdb_rating, tmdb_rating, rt_rating, allocine_rating]
+    ratings_list = [imdb_rating, movie.tmdb_rating, rt_rating, allocine_rating]
 
     rating = np.round(np.mean(
         np.array([rating for rating in ratings_list if type(rating) != type(None)]))*10, 1)
 
     functions.plot_cast(movie_id)
 
-    if rating <= 20:
-        color = "darkred"
-    elif 20 < rating <= 40:
-        color = "red"
-    elif 40 < rating <= 60:
-        color = "orange"
-    elif 60 < rating <= 80:
-        color = "green"
-    else:
-        color = "darkgreen"
-
-    empty1, figspace, empty2 = st.columns([1.5, 5, 1])
-
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        number={'suffix': "%"},
-        domain={'x': [0, 1], 'y': [0, 1]},
-        value=rating,
-        gauge={'axis': {'range': [0, 100],
-                        "ticksuffix": "%"}, "bar": {"color": color}},
-        title={'text': "Movie Aggregated Rating"}))
-
-    figspace.plotly_chart(fig)
+    functions.plot_gauge(rating)

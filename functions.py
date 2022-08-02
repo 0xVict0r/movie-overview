@@ -1,73 +1,58 @@
-from bs4 import BeautifulSoup
 import httpx
-import json
 import streamlit as st
+import plotly.graph_objects as go
 
 api_key = st.secrets["tmdb_api"]
-
-
-def get_imdb_rating(imdb_id):
-    url = f"https://www.imdb.com/title/{imdb_id}/?ref_=nv_sr_srsg_0"
-    response = httpx.get(url)
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    return float(soup.find("span", class_="sc-7ab21ed2-1 jGRxWM").text)
-
-
-def get_rt_ratings(movie_name, year_str):
-    search_query = movie_name.replace(" ", "%20")
-    search_page = httpx.get(
-        f"https://www.rottentomatoes.com/search?search={search_query}")
-    search_soup = BeautifulSoup(search_page.text, 'html.parser')
-
-    movie_search = search_soup.find(
-        "search-page-result", attrs={"slot": "movie"})
-
-    first_movie = movie_search.find(
-        "search-page-media-row", attrs={"releaseyear": year_str})
-
-    movie_link = first_movie.find(
-        "a", attrs={"data-qa": "thumbnail-link"})["href"]
-
-    movie_page = httpx.get(movie_link)
-    search_soup = BeautifulSoup(movie_page.text, 'html.parser')
-
-    movie_rating = json.loads(search_soup.find(
-        "script", attrs={"id": "score-details-json"}).text)["modal"]["audienceScoreAll"]["averageRating"]
-
-    return float(movie_rating)*2
-
-
-def get_rt_ratings(movie_name, year_str):
-    search_query = movie_name.replace(" ", "%20")
-    search_page = httpx.get(
-        f"https://www.allocine.fr/rechercher/movie/?q={search_query}")
-    search_soup = BeautifulSoup(search_page.text, 'html.parser')
-
-    movie_search = search_soup.find("section", class_="section movies-results")
-    movie_list = movie_search.find_all("li", class_="mdl")
-
-    rating = 0
-
-    for movie in movie_list:
-        try:
-            year = movie.find("span", class_="date").text[-4:]
-        except AttributeError:
-            year = '0'
-
-        if year == year_str:
-            rating = float(movie.find_all(
-                "span", class_="stareval-note")[1].text.replace(',', '.'))
-
-    return rating*2
 
 
 def safe_execute(default, exceptions, function, *args):
     try:
         return function(*args)
-    except exceptions:
+    except exceptions as e:
+        print(f"{function}: {e}")
         return default
+
+
+def plot_gauge(rating):
+    if rating <= 20:
+        color = "darkred"
+    elif 20 < rating <= 40:
+        color = "red"
+    elif 40 < rating <= 60:
+        color = "orange"
+    elif 60 < rating <= 80:
+        color = "green"
+    else:
+        color = "darkgreen"
+
+    empty1, figspace, empty2 = st.columns([1.5, 5, 1])
+
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        number={'suffix': "%"},
+        domain={'x': [0, 1], 'y': [0, 1]},
+        value=rating,
+        gauge={'axis': {'range': [0, 100],
+                        "ticksuffix": "%"}, "bar": {"color": color}},
+        title={'text': "Movie Aggregated Rating"}))
+
+    figspace.plotly_chart(fig)
+
+
+def plot_general_info(movie):
+    col1, col2 = st.columns([1, 4])
+    col1.image(
+        f"https://image.tmdb.org/t/p/original{movie.poster_link}", use_column_width=True)
+
+    col2.markdown(f"""
+    # {movie.title}
+    ##### *Release Date: {movie.release_date}*
+    ###### *Original Language: {movie.language}*
+    ###### *Country(ies): {movie.countries}*
+    ###### *Genre(s): {movie.genres}*
+    ###### *Run Time (HH:MM:SS): {movie.run_time}*
+    *{movie.synopsis}*
+    """)
 
 
 def plot_cast(movie_id):
@@ -117,4 +102,4 @@ def plot_cast(movie_id):
 
 
 if __name__ == "__main__":
-    print(get_rt_ratings("star wars", "1977"))
+    print("Hello World")
